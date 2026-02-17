@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Plant Care</title>
+  <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #f5f1e8 0%, #e8f4ea 100%);
+      font-family: 'Inter', sans-serif;
+      color: #2d5016;
+    }
+    header { text-align: center; padding: 60px 20px 40px; }
+    .header-card {
+      display: inline-block;
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(10px);
+      border-radius: 24px;
+      padding: 40px 60px;
+      box-shadow: 0 10px 40px rgba(107,148,64,0.12);
+    }
+    .header-emoji { font-size: 3rem; margin-bottom: 12px; }
+    .header-title { font-family:'Crimson Pro',Georgia,serif; font-size:3rem; font-weight:300; letter-spacing:-0.03em; color:#2d5016; margin-bottom:8px; }
+    .header-sub { font-size:1rem; color:#5a7c3e; }
+
+    main { max-width:1200px; margin:0 auto; padding:0 24px 60px; }
+
+    #notif-banner {
+      background: linear-gradient(135deg,#fffbf0,#fff9e6);
+      border: 2px solid #f0d878; border-radius: 20px; padding: 22px 28px;
+      display: flex; align-items: center; gap: 20px; margin-bottom: 40px;
+      box-shadow: 0 4px 20px rgba(240,216,120,0.2);
+    }
+    #notif-banner.hidden { display:none; }
+    .notif-icon { background:white; border-radius:12px; padding:12px; font-size:1.4rem; line-height:1; flex-shrink:0; }
+    .notif-text strong { display:block; font-size:1.05rem; margin-bottom:3px; }
+    .notif-text span { font-size:0.92rem; color:#5a7c3e; }
+    #notif-btn {
+      margin-left:auto; background:#6b9440; color:white; border:none; border-radius:12px;
+      padding:12px 24px; cursor:pointer; font-weight:600; font-size:0.95rem;
+      font-family:'Inter',sans-serif; white-space:nowrap; transition:background 0.2s,transform 0.15s;
+    }
+    #notif-btn:hover { background:#578031; transform:translateY(-1px); }
+
+    #add-btn-wrap { display:flex; justify-content:center; margin-bottom:50px; }
+    #add-btn {
+      width:100%; max-width:600px; background:white; border:3px dashed #b8d4a0; border-radius:20px;
+      padding:30px; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:14px;
+      font-family:'Inter',sans-serif; font-size:1.05rem; font-weight:600; color:#6b9440;
+      transition:all 0.25s; box-shadow:0 4px 15px rgba(107,148,64,0.08);
+    }
+    #add-btn:hover { background:#f0f7eb; border-color:#6b9440; transform:translateY(-2px); box-shadow:0 6px 20px rgba(107,148,64,0.15); }
+
+    #form-wrap { max-width:700px; margin:0 auto 50px; display:none; }
+    #form-wrap.open { display:block; }
+    .form-card { background:white; border-radius:24px; padding:40px; box-shadow:0 10px 40px rgba(107,148,64,0.12); border:2px solid #e8f4ea; }
+    .form-card h2 { font-family:'Crimson Pro',Georgia,serif; font-size:2rem; font-weight:300; letter-spacing:-0.02em; text-align:center; margin-bottom:30px; }
+    .field { margin-bottom:24px; position:relative; }
+    .field-label { display:block; font-weight:600; font-size:0.88rem; letter-spacing:0.01em; color:#2d5016; margin-bottom:10px; }
+    .field input[type=text], .field input[type=number] {
+      width:100%; padding:14px 18px; border:2px solid #e0e8d5; border-radius:14px;
+      font-size:1rem; font-family:'Inter',sans-serif; outline:none; transition:border-color 0.2s;
+      color:#2d5016; background:white;
+    }
+    .field input[type=text]:focus, .field input[type=number]:focus { border-color:#6b9440; }
+    .days-wrap { position:relative; }
+    .days-wrap input { padding-right:70px; }
+    .days-label { position:absolute; right:18px; top:50%; transform:translateY(-50%); color:#5a7c3e; font-size:0.92rem; font-weight:500; pointer-events:none; }
+    .field-hint { display:block; font-size:0.83rem; color:#5a7c3e; opacity:0.8; margin-top:7px; }
+
+    #suggestions {
+      display:none; position:absolute; top:calc(100% + 4px); left:0; right:0;
+      background:white; border:2px solid #e0e8d5; border-radius:14px;
+      max-height:280px; overflow-y:auto; box-shadow:0 8px 24px rgba(0,0,0,0.12); z-index:100;
+    }
+    .sug-item { padding:13px 18px; cursor:pointer; transition:background 0.12s; border-bottom:1px solid #f5f5f5; }
+    .sug-item:last-child { border-bottom:none; }
+    .sug-item:hover, .sug-item.active { background:#f0f7eb; }
+    .sug-name { font-weight:600; font-size:0.95rem; margin-bottom:3px; }
+    .sug-meta { display:flex; justify-content:space-between; align-items:center; font-size:0.83rem; color:#5a7c3e; }
+    .sug-badge { background:#e8f4ea; padding:3px 10px; border-radius:8px; font-weight:600; font-size:0.78rem; color:#6b9440; flex-shrink:0; }
+
+    #photo-label {
+      display:inline-flex; align-items:center; gap:10px; padding:13px 22px;
+      background:#f0f7eb; border:2px solid #e0e8d5; border-radius:14px; cursor:pointer;
+      font-size:0.95rem; font-weight:500; color:#2d5016; transition:all 0.2s;
+    }
+    #photo-label:hover { background:#e8f4ea; border-color:#b8d4a0; }
+
+    .form-btns { display:flex; gap:16px; margin-top:32px; }
+    .btn-green {
+      flex:1; background:#6b9440; color:white; border:none; border-radius:14px; padding:16px;
+      cursor:pointer; font-weight:600; font-size:1rem; font-family:'Inter',sans-serif;
+      transition:all 0.2s; box-shadow:0 4px 12px rgba(107,148,64,0.2);
+    }
+    .btn-green:hover { background:#578031; transform:translateY(-1px); }
+    .btn-outline {
+      flex:1; background:white; color:#5a7c3e; border:2px solid #e0e8d5; border-radius:14px; padding:16px;
+      cursor:pointer; font-weight:600; font-size:1rem; font-family:'Inter',sans-serif; transition:all 0.2s;
+    }
+    .btn-outline:hover { background:#f5f5f5; border-color:#b8d4a0; }
+
+    #empty { text-align:center; padding:80px 20px; display:none; }
+    #empty.show { display:block; }
+    .empty-icon { font-size:5rem; opacity:0.25; margin-bottom:20px; }
+    #empty h3 { font-family:'Crimson Pro',Georgia,serif; font-size:1.5rem; font-weight:400; margin-bottom:10px; }
+    #empty p { color:#5a7c3e; opacity:0.75; }
+
+    #plant-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(320px,1fr)); gap:28px; }
+
+    .card { background:white; border-radius:24px; overflow:hidden; border:2px solid #e8f4ea; box-shadow:0 6px 20px rgba(107,148,64,0.08); display:flex; flex-direction:column; }
+    .card.urgent { border-color:#f0d878; border-width:3px; animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{box-shadow:0 8px 30px rgba(212,160,23,0.3)} 50%{box-shadow:0 12px 40px rgba(212,160,23,0.5)} }
+    .card-img { height:200px; background:linear-gradient(135deg,#b8d4a0,#6b9440); display:flex; align-items:center; justify-content:center; font-size:4.5rem; position:relative; background-size:cover; background-position:center; }
+    .del-btn {
+      position:absolute; top:12px; right:12px; background:rgba(255,255,255,0.95); border:none; border-radius:10px;
+      width:38px; height:38px; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      box-shadow:0 2px 8px rgba(0,0,0,0.1); transition:all 0.2s;
+    }
+    .del-btn:hover { background:#ffebee; transform:scale(1.08); }
+    .card-body { padding:22px; flex:1; display:flex; flex-direction:column; }
+    .card-name { font-family:'Crimson Pro',Georgia,serif; font-size:1.45rem; font-weight:500; letter-spacing:-0.01em; margin-bottom:4px; }
+    .card-species { font-size:0.88rem; color:#5a7c3e; font-style:italic; opacity:0.9; margin-bottom:18px; }
+    .status-box { border-radius:12px; padding:13px 15px; margin-bottom:16px; font-size:0.88rem; border:1px solid #e8f4ea; background:#f0f7eb; }
+    .status-box.urgent { background:#fff9e6; border-color:#f0d878; }
+    .status-main { font-weight:600; font-size:0.92rem; margin-bottom:7px; }
+    .status-sub { font-size:0.83rem; color:#5a7c3e; opacity:0.8; }
+    .card-actions { margin-top:auto; }
+    .water-btn {
+      width:100%; border:none; border-radius:14px; padding:15px; cursor:pointer; font-weight:600;
+      font-size:1rem; font-family:'Inter',sans-serif; transition:all 0.2s; margin-bottom:11px;
+      background:#6b9440; color:white; box-shadow:0 4px 12px rgba(107,148,64,0.2);
+    }
+    .water-btn.urgent { background:#d4a017; box-shadow:0 4px 12px rgba(212,160,23,0.3); }
+    .water-btn:hover { transform:translateY(-1px); filter:brightness(0.9); }
+    .hist-btn {
+      width:100%; background:transparent; color:#6b9440; border:2px solid #e0e8d5; border-radius:14px;
+      padding:11px; cursor:pointer; font-weight:600; font-size:0.88rem; font-family:'Inter',sans-serif;
+      transition:all 0.2s;
+    }
+    .hist-btn:hover { background:#f0f7eb; border-color:#6b9440; }
+    .hist-list { display:none; margin-top:15px; background:#f9faf8; border-radius:12px; padding:15px; max-height:220px; overflow-y:auto; border:1px solid #e8f4ea; }
+    .hist-list.open { display:block; }
+    .hist-title { font-size:0.83rem; font-weight:600; margin-bottom:11px; }
+    .hist-row { display:flex; align-items:center; gap:10px; padding:9px 0; font-size:0.83rem; color:#5a7c3e; border-bottom:1px solid #e8f4ea; }
+    .hist-row:last-child { border-bottom:none; }
+    .hist-dot { background:#e8f4ea; border-radius:6px; padding:6px 8px; font-size:0.85rem; flex-shrink:0; }
+    .hist-date { font-weight:500; }
+    .hist-time { margin-left:auto; opacity:0.55; font-size:0.78rem; }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="header-card">
+    <div class="header-emoji">🌿</div>
+    <h1 class="header-title">Plant Care</h1>
+    <p class="header-sub">Verzorg je planten met gemak</p>
+  </div>
+</header>
+
+<main>
+  <!-- Notificatie banner -->
+  <div id="notif-banner">
+    <div class="notif-icon">🔔</div>
+    <div class="notif-text">
+      <strong>Schakel meldingen in</strong>
+      <span>Ontvang een melding wanneer je planten water nodig hebben</span>
+    </div>
+    <button id="notif-btn" onclick="requestNotifications()">Inschakelen</button>
+  </div>
+
+  <!-- Toevoegen knop -->
+  <div id="add-btn-wrap">
+    <button id="add-btn" onclick="toggleForm(true)">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nieuwe Plant Toevoegen
+    </button>
+  </div>
+
+  <!-- Formulier -->
+  <div id="form-wrap">
+    <div class="form-card">
+      <h2>Nieuwe Plant</h2>
+
+      <div class="field">
+        <label class="field-label" for="f-name">Naam *</label>
+        <input type="text" id="f-name" placeholder="Bijv. Monstera in de woonkamer" />
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-species">Soort</label>
+        <input type="text" id="f-species" placeholder="Typ voor suggesties..." autocomplete="off"
+          oninput="handleSpeciesInput(this.value)"
+          onkeydown="handleSpeciesKey(event)"
+          onblur="setTimeout(hideSugg, 200)" />
+        <div id="suggestions"></div>
+      </div>
+
+      <div class="field">
+        <label class="field-label" for="f-days">Water geven elke *</label>
+        <div class="days-wrap">
+          <input type="number" id="f-days" value="7" min="1" max="365" />
+          <span class="days-label">dagen</span>
+        </div>
+        <small class="field-hint" id="days-hint">Wordt automatisch ingevuld bij soort</small>
+      </div>
+
+      <div class="field">
+        <label class="field-label">Foto (optioneel)</label>
+        <input type="file" id="f-photo" accept="image/*" style="display:none" onchange="handlePhoto(this)" />
+        <label id="photo-label" for="f-photo">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg>
+          <span id="photo-txt">Kies foto</span>
+        </label>
+      </div>
+
+      <div class="form-btns">
+        <button class="btn-green" onclick="submitPlant()">Toevoegen</button>
+        <button class="btn-outline" onclick="toggleForm(false)">Annuleren</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lege staat -->
+  <div id="empty">
+    <div class="empty-icon">🪴</div>
+    <h3>Nog geen planten</h3>
+    <p>Voeg je eerste plant toe om te beginnen</p>
+  </div>
+
+  <!-- Grid -->
+  <div id="plant-grid"></div>
+</main>
+
+<script>
+/* ── DATABASE ─────────────────────────────────────── */
+const DB = [
+  { name:'Monstera Deliciosa',  common:['Gatenplant','Monstera'],           d:7  },
+  { name:'Ficus Lyrata',        common:['Vioolbladplant','Ficus'],          d:7  },
+  { name:'Sansevieria',         common:['Vrouwentong','Slangenplant'],      d:14 },
+  { name:'Pothos',              common:['Scindapsus','Duivelskruid'],       d:7  },
+  { name:'Calathea',            common:['Calathea','Pauwenplant'],          d:5  },
+  { name:'Philodendron',        common:['Philodendron','Boomvriend'],       d:7  },
+  { name:'Spathiphyllum',       common:['Lepelplant','Vredeslelie'],        d:7  },
+  { name:'Aloe Vera',           common:['Aloë Vera'],                       d:14 },
+  { name:'Dracaena',            common:['Drakenbloedboom','Dracaena'],      d:10 },
+  { name:'Yucca',               common:['Yucca','Palmlelie'],               d:14 },
+  { name:'Pilea Peperomioides', common:['Pannenkoekplant','Geluksmuntje'],  d:7  },
+  { name:'Zamioculcas',         common:['Zamioculcas','ZZ Plant'],          d:14 },
+  { name:'Maranta',             common:['Maranta','Bidplant'],              d:5  },
+  { name:'Alocasia',            common:['Alocasia','Olifantsoor'],          d:7  },
+  { name:'Anthurium',           common:['Anthurium','Flamingoplant'],       d:7  },
+  { name:'Begonia',             common:['Begonia'],                         d:5  },
+  { name:'Cactus',              common:['Cactus'],                          d:21 },
+  { name:'Chlorophytum',        common:['Graslelie','Spinplant'],           d:7  },
+  { name:'Crassula Ovata',      common:['Geldboom','Jadeplant'],            d:14 },
+  { name:'Croton',              common:['Croton','Wonderstruik'],           d:5  },
+  { name:'Echeveria',           common:['Echeveria'],                       d:14 },
+  { name:'Varen',               common:['Varen','Nephrolepis'],             d:5  },
+  { name:'Fittonia',            common:['Fittonia','Mozaïekplant'],         d:5  },
+  { name:'Haworthia',           common:['Haworthia'],                       d:14 },
+  { name:'Hedera Helix',        common:['Klimop','Hedera'],                 d:7  },
+  { name:'Hoya',                common:['Hoya','Porseleinbloem'],           d:10 },
+  { name:'Orchidee',            common:['Orchidee','Phalaenopsis'],         d:7  },
+  { name:'Peperomia',           common:['Peperomia','Radiatorplantje'],     d:7  },
+  { name:'Ficus Elastica',      common:['Rubberplant','Ficus Elastica'],    d:7  },
+  { name:'Schefflera',          common:['Schefflera','Vingerboom'],         d:7  },
+  { name:'Sedum',               common:['Sedum','Vetkruid'],                d:14 },
+  { name:'Strelitzia',          common:['Paradijsvogelplant','Strelitzia'], d:7  },
+  { name:'Succulenten',         common:['Succulenten'],                     d:14 },
+  { name:'Tradescantia',        common:['Vaderplant','Tradescantia'],       d:7  },
+];
+
+/* ── STATE ────────────────────────────────────────── */
+let plants = [];
+let photoData = null;
+let sugList = [];
+let sugIdx = -1;
+
+try { plants = JSON.parse(localStorage.getItem('pc_plants') || '[]'); } catch(e) { plants = []; }
+
+function save() {
+  try { localStorage.setItem('pc_plants', JSON.stringify(plants)); } catch(e) {}
+}
+
+/* ── NOTIFICATIONS ────────────────────────────────── */
+function checkBanner() {
+  try {
+    if (!('Notification' in window) || Notification.permission === 'granted')
+      document.getElementById('notif-banner').classList.add('hidden');
+  } catch(e) {
+    document.getElementById('notif-banner').classList.add('hidden');
+  }
+}
+async function requestNotifications() {
+  try {
+    if (!('Notification' in window)) return;
+    const p = await Notification.requestPermission();
+    if (p === 'granted') {
+      document.getElementById('notif-banner').classList.add('hidden');
+      new Notification('🌱 Geactiveerd!', { body: 'Je ontvangt nu meldingen voor je planten.' });
+    }
+  } catch(e) {}
+}
+function notify(t, b) {
+  try { if ('Notification' in window && Notification.permission === 'granted') new Notification(t,{body:b}); } catch(e) {}
+}
+
+/* ── FORM ─────────────────────────────────────────── */
+function toggleForm(show) {
+  document.getElementById('form-wrap').classList.toggle('open', show);
+  document.getElementById('add-btn-wrap').style.display = show ? 'none' : 'flex';
+  if (!show) resetForm();
+}
+function resetForm() {
+  document.getElementById('f-name').value = '';
+  document.getElementById('f-species').value = '';
+  document.getElementById('f-days').value = 7;
+  document.getElementById('days-hint').textContent = 'Wordt automatisch ingevuld bij soort';
+  document.getElementById('photo-txt').textContent = 'Kies foto';
+  document.getElementById('f-photo').value = '';
+  photoData = null;
+  hideSugg();
+}
+function handlePhoto(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const r = new FileReader();
+  r.onloadend = () => { photoData = r.result; document.getElementById('photo-txt').textContent = '✓ Foto gekozen'; };
+  r.readAsDataURL(file);
+}
+
+/* ── AUTOCOMPLETE ─────────────────────────────────── */
+function handleSpeciesInput(val) {
+  sugIdx = -1;
+  if (!val.trim()) { hideSugg(); return; }
+  const q = val.toLowerCase();
+  sugList = DB.filter(p => p.name.toLowerCase().includes(q) || p.common.some(c => c.toLowerCase().includes(q))).slice(0,8);
+  showSugg();
+}
+function showSugg() {
+  const box = document.getElementById('suggestions');
+  if (!sugList.length) { hideSugg(); return; }
+  box.innerHTML = sugList.map((p,i) =>
+    '<div class="sug-item' + (i===sugIdx?' active':'') + '" onmousedown="pickSugg(' + i + ')">' +
+      '<div class="sug-name">' + p.name + '</div>' +
+      '<div class="sug-meta"><span>' + p.common.join(', ') + '</span>' +
+      '<span class="sug-badge">💧 ' + p.d + 'd</span></div>' +
+    '</div>'
+  ).join('');
+  box.style.display = 'block';
+}
+function hideSugg() {
+  document.getElementById('suggestions').style.display = 'none';
+  sugList = []; sugIdx = -1;
+}
+function pickSugg(i) {
+  const p = sugList[i];
+  document.getElementById('f-species').value = p.name;
+  document.getElementById('f-days').value = p.d;
+  document.getElementById('days-hint').textContent = 'Automatisch ingevuld voor ' + p.name;
+  hideSugg();
+}
+function handleSpeciesKey(e) {
+  if (!sugList.length) return;
+  if (e.key==='ArrowDown') { e.preventDefault(); sugIdx=Math.min(sugIdx+1,sugList.length-1); showSugg(); }
+  else if (e.key==='ArrowUp') { e.preventDefault(); sugIdx=Math.max(sugIdx-1,0); showSugg(); }
+  else if (e.key==='Enter' && sugIdx>=0) { e.preventDefault(); pickSugg(sugIdx); }
+  else if (e.key==='Escape') hideSugg();
+}
+
+/* ── SUBMIT ───────────────────────────────────────── */
+function submitPlant() {
+  const nameEl = document.getElementById('f-name');
+  const daysEl = document.getElementById('f-days');
+  const name = nameEl.value.trim();
+  const days = parseInt(daysEl.value);
+
+  if (!name) {
+    nameEl.style.borderColor = '#d32f2f';
+    nameEl.focus();
+    setTimeout(() => nameEl.style.borderColor = '#e0e8d5', 2500);
+    return;
+  }
+  if (!days || days < 1) {
+    daysEl.style.borderColor = '#d32f2f';
+    daysEl.focus();
+    setTimeout(() => daysEl.style.borderColor = '#e0e8d5', 2500);
+    return;
+  }
+
+  plants.push({
+    id: '' + Date.now(),
+    name: name,
+    species: document.getElementById('f-species').value.trim(),
+    waterDays: days,
+    imageUrl: photoData || null,
+    lastWatered: new Date().toISOString(),
+    history: [],
+  });
+  save();
+  render();
+  toggleForm(false);
+}
+
+/* ── ACTIONS ──────────────────────────────────────── */
+function waterPlant(id) {
+  const p = plants.find(x => x.id === id);
+  if (!p) return;
+  const entry = { date: new Date().toISOString() };
+  p.lastWatered = entry.date;
+  p.history.push(entry);
+  save();
+  notify('💧 Water gegeven!', p.name + ' is nu blij!');
+  render();
+}
+function deletePlant(id) {
+  if (!confirm('Plant verwijderen?')) return;
+  plants = plants.filter(p => p.id !== id);
+  save();
+  render();
+}
+function toggleHist(id) {
+  const list = document.getElementById('hl-' + id);
+  const btn  = document.getElementById('hb-' + id);
+  const open = list.classList.toggle('open');
+  btn.textContent = (open ? 'Verberg' : 'Toon') + ' geschiedenis (' + list.querySelectorAll('.hist-row').length + ')';
+}
+
+/* ── HELPERS ──────────────────────────────────────── */
+function dAgo(ds) { return Math.floor((Date.now() - new Date(ds)) / 86400000); }
+function fDate(ds) {
+  const d = dAgo(ds);
+  if (d===0) return 'Vandaag';
+  if (d===1) return 'Gisteren';
+  if (d<7) return d + ' dagen geleden';
+  return new Date(ds).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+}
+function fTime(ds) { return new Date(ds).toLocaleTimeString('nl-NL',{hour:'2-digit',minute:'2-digit'}); }
+
+/* ── RENDER ───────────────────────────────────────── */
+function render() {
+  document.getElementById('empty').classList.toggle('show', plants.length === 0);
+  document.getElementById('plant-grid').innerHTML = plants.map(card).join('');
+  checkBanner();
+}
+
+function card(p) {
+  const since = dAgo(p.lastWatered);
+  const until = p.waterDays - since;
+  const urg   = until <= 0;
+  const imgSt = p.imageUrl ? 'background-image:url("' + p.imageUrl + '");background-size:cover;background-position:center' : '';
+  const rows  = [...p.history].reverse().map(h =>
+    '<div class="hist-row"><div class="hist-dot">💧</div>' +
+    '<span class="hist-date">' + fDate(h.date) + '</span>' +
+    '<span class="hist-time">' + fTime(h.date) + '</span></div>'
+  ).join('');
+  const hist = p.history.length
+    ? '<button class="hist-btn" id="hb-' + p.id + '" onclick="toggleHist(\'' + p.id + '\')">Toon geschiedenis (' + p.history.length + ')</button>' +
+      '<div class="hist-list" id="hl-' + p.id + '"><div class="hist-title">Watergeschiedenis</div>' + rows + '</div>'
+    : '';
+
+  return '<div class="card' + (urg?' urgent':'') + '">' +
+    '<div class="card-img" style="' + imgSt + '">' +
+      (p.imageUrl ? '' : '🌱') +
+      '<button class="del-btn" onclick="deletePlant(\'' + p.id + '\')" title="Verwijderen">' +
+        '<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#d32f2f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6M14 11v6M9 6V4h6v2"/></svg>' +
+      '</button>' +
+    '</div>' +
+    '<div class="card-body">' +
+      '<div class="card-name">' + p.name + '</div>' +
+      (p.species ? '<div class="card-species">' + p.species + '</div>' : '') +
+      '<div class="status-box' + (urg?' urgent':'') + '">' +
+        '<div class="status-main" style="color:' + (urg?'#d4a017':'#2d5016') + '">' +
+          (urg ? '⚠️ Water nodig! (' + Math.abs(until) + ' dag' + (Math.abs(until)===1?'':'en') + ' te laat)' : '✅ Nog ' + until + ' dag' + (until===1?'':'en')) +
+        '</div>' +
+        '<div class="status-sub">Laatst water: ' + (since===0?'vandaag':since+' dag'+(since===1?'':'en')+' geleden') + '</div>' +
+      '</div>' +
+      '<div class="card-actions">' +
+        '<button class="water-btn' + (urg?' urgent':'') + '" onclick="waterPlant(\'' + p.id + '\')">💧 Water Geven</button>' +
+        hist +
+      '</div>' +
+    '</div>' +
+  '</div>';
+}
+
+/* ── INIT ─────────────────────────────────────────── */
+render();
+setInterval(() => {
+  plants.forEach(p => { if (dAgo(p.lastWatered) >= p.waterDays) notify('🌱 Water tijd!', p.name + ' heeft water nodig!'); });
+}, 3600000);
+</script>
+</body>
+</html>
